@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <title>AVL Tree Visualizer</title>
+
+  <!-- Google Fonts: Mulish (Tất cả giao diện và văn bản) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300..1000;1,300..1000&display=swap"
+    rel="stylesheet" />
+
+  <!-- Remix Icon CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          borderRadius: {
+            none: '0px',
+            sm: '6px',
+            DEFAULT: '6px',
+            md: '6px',
+            lg: '6px',
+            xl: '6px',
+            '2xl': '6px',
+            '3xl': '6px',
+            full: '6px',
+          },
+          fontFamily: {
+            sans: ['"Mulish"', "sans-serif"],
+            mono: ['"Mulish"', "monospace"],
+          },
+          colors: {
+            teal: {
+              50: "#f0fdfa",
+              100: "#ccfbf1",
+              500: "#14b8a6",
+              600: "#0d9488",
+              700: "#0f766e",
+              800: "#115e59",
+              900: "#134e4a",
+            },
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body
+  class="min-h-screen bg-slate-50 text-slate-800 font-sans antialiased selection:bg-teal-500 selection:text-white relative flex flex-col">
+
+  <!-- Background Ambient Grid -->
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div
+      class="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:24px_24px] opacity-40">
+    </div>
+  </div>
+
+  <!-- Main App Wrapper (Bung rộng toàn màn hình) -->
+  <div class="relative z-10 w-full max-w-full mx-auto px-3 sm:px-4 py-2.5 flex flex-col flex-1 gap-2.5">
+
+    <!-- Compact Unified 1-Row Control Bar (Gọn gàng, tinh tế) -->
+    <div class="bg-white border border-slate-200 rounded-[6px] p-1.5 sm:p-2 space-y-1">
+      <div class="flex flex-col md:flex-row gap-2 items-stretch md:items-center">
+
+        <!-- Logo & Brand Title (AVL Visualizer) -->
+        <div class="flex items-center gap-2 shrink-0 pr-1">
+          <div
+            class="w-7 h-7 rounded-[6px] bg-teal-50 text-teal-700 border border-teal-200 flex items-center justify-center">
+            <i class="ri-node-tree text-base leading-none"></i>
+          </div>
+          <h1 class="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight whitespace-nowrap">
+            AVL <span class="text-teal-600">Visualizer</span>
+          </h1>
+        </div>
+
+        <!-- Input Field -->
+        <div class="relative flex-1 min-w-[180px]">
+          <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+            <i class="ri-edit-line text-xs"></i>
+          </div>
+          <input type="text" id="node-value"
+            class="w-full pl-7 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-[6px] text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 text-xs sm:text-sm font-mono transition-all"
+            placeholder="Nhập số (vd: 10, 20, 5, 15) hoặc nhấn Enter..." />
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap items-center gap-1 shrink-0">
+          <!-- Mẫu Thử Dropdown -->
+          <div class="relative">
+            <button id="presets-btn" type="button"
+              class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[6px] bg-amber-50 hover:bg-amber-100 active:scale-95 text-amber-800 font-semibold text-xs border border-amber-200 transition-all cursor-pointer">
+              <i class="ri-sparkling-line text-amber-600 text-xs"></i>
+              <span>Mẫu thử</span>
+              <i class="ri-arrow-down-s-line text-xs text-amber-600"></i>
+            </button>
+
+            <!-- Dropdown Menu Danh Sách Mẫu -->
+            <div id="presets-dropdown-menu"
+              class="hidden absolute left-0 top-full mt-1.5 z-40 bg-white border border-slate-200 rounded-[6px] p-1.5 shadow-lg min-w-[270px] text-xs font-medium text-slate-700">
+              <div
+                class="px-2.5 py-1 text-[10px] font-bold text-slate-400 border-b border-slate-100 uppercase tracking-wider flex items-center justify-between">
+                <span>Mẫu Thử Điển Hình</span>
+                <i class="ri-node-tree text-teal-600"></i>
+              </div>
+              <div class="py-1 space-y-0.5">
+                <button type="button" data-preset="30, 20, 10"
+                  class="preset-item w-full text-left px-2.5 py-1.5 rounded-[6px] hover:bg-teal-50 hover:text-teal-800 flex items-center justify-between transition-all cursor-pointer">
+                  <span class="font-semibold flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span> Xoay Đơn LL
+                  </span>
+                  <span class="font-mono text-[11px] text-slate-400">30, 20, 10</span>
+                </button>
+
+                <button type="button" data-preset="10, 20, 30"
+                  class="preset-item w-full text-left px-2.5 py-1.5 rounded-[6px] hover:bg-teal-50 hover:text-teal-800 flex items-center justify-between transition-all cursor-pointer">
+                  <span class="font-semibold flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span> Xoay Đơn RR
+                  </span>
+                  <span class="font-mono text-[11px] text-slate-400">10, 20, 30</span>
+                </button>
+
+                <button type="button" data-preset="30, 10, 20"
+                  class="preset-item w-full text-left px-2.5 py-1.5 rounded-[6px] hover:bg-amber-50 hover:text-amber-800 flex items-center justify-between transition-all cursor-pointer">
+                  <span class="font-semibold flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Xoay Kép LR
+                  </span>
+                  <span class="font-mono text-[11px] text-slate-400">30, 10, 20</span>
+                </button>
+
+                <button type="button" data-preset="10, 30, 20"
+                  class="preset-item w-full text-left px-2.5 py-1.5 rounded-[6px] hover:bg-amber-50 hover:text-amber-800 flex items-center justify-between transition-all cursor-pointer">
+                  <span class="font-semibold flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Xoay Kép RL
+                  </span>
+                  <span class="font-mono text-[11px] text-slate-400">10, 30, 20</span>
+                </button>
+
+                <div class="border-t border-slate-100 my-1"></div>
+
+                <button type="button" data-preset="20, 10, 30, 5, 15, 25, 35"
+                  class="preset-item w-full text-left px-2.5 py-1.5 rounded-[6px] hover:bg-indigo-50 hover:text-indigo-800 flex items-center justify-between transition-all cursor-pointer">
+                  <span class="font-semibold flex items-center gap-1.5">
+                    <i class="ri-node-tree text-indigo-500 text-xs"></i> Cây Đầy Đủ (7 nút)
+                  </span>
+                  <span class="font-mono text-[11px] text-slate-400">20, 10, 30...</span>
+                </button>
+
+                <button type="button" data-preset="50, 25, 75, 10, 30, 60, 80, 5, 15, 28"
+                  class="preset-item w-full text-left px-2.5 py-1.5 rounded-[6px] hover:bg-indigo-50 hover:text-indigo-800 flex items-center justify-between transition-all cursor-pointer">
+                  <span class="font-semibold flex items-center gap-1.5">
+                    <i class="ri-bubble-chart-line text-indigo-500 text-xs"></i> Cây Lớn (10 nút)
+                  </span>
+                  <span class="font-mono text-[11px] text-slate-400">50, 25, 75...</span>
+                </button>
+
+                <button type="button" id="preset-random-btn"
+                  class="w-full text-left px-2.5 py-1.5 rounded-[6px] hover:bg-slate-100 hover:text-slate-900 flex items-center justify-between transition-all cursor-pointer">
+                  <span class="font-semibold flex items-center gap-1.5">
+                    <i class="ri-shuffle-line text-teal-600 text-xs"></i> Sinh 6 số ngẫu nhiên
+                  </span>
+                  <span class="font-mono text-[11px] text-slate-400">Random</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Thêm -->
+          <button id="insert-btn"
+            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-[6px] bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-semibold text-xs transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none">
+            <i class="ri-add-line text-xs"></i>
+            <span>Thêm</span>
+          </button>
+
+          <!-- Xóa -->
+          <button id="delete-btn" disabled
+            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-[6px] bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-semibold text-xs transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none">
+            <i class="ri-delete-bin-line text-xs"></i>
+            <span>Xóa</span>
+          </button>
+
+          <!-- Tìm kiếm -->
+          <button id="search-btn" disabled
+            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-[6px] bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-semibold text-xs transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none">
+            <i class="ri-search-line text-xs"></i>
+            <span>Tìm kiếm</span>
+          </button>
+
+          <!-- Reset -->
+          <button id="reset-btn" disabled
+            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-[6px] bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-semibold text-xs border border-slate-200 transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none">
+            <i class="ri-refresh-line text-xs"></i>
+            <span>Làm mới</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Plain Text Validation Line -->
+      <div id="input-error"
+        class="hidden text-xs font-medium text-rose-600 flex items-center gap-1 pt-0.5 border-t border-slate-100">
+        <i class="ri-error-warning-line text-xs"></i>
+        <span id="input-error-text">Vui lòng nhập giá trị số hợp lệ.</span>
+      </div>
+    </div>
+
+    <!-- MAIN 2-COLUMN DASHBOARD LAYOUT -->
+    <main class="grid grid-cols-1 lg:grid-cols-12 gap-2.5 flex-1 items-stretch min-h-[580px]">
+
+      <!-- LEFT COLUMN: Tree Visualization Canvas (Tự bung rộng) -->
+      <section
+        class="lg:col-span-7 xl:col-span-8 bg-white border border-slate-200 rounded-[6px] overflow-hidden flex flex-col h-full min-h-[540px] lg:h-[calc(100vh-140px)]">
+
+        <!-- Canvas Top Bar: Số nút, Chiều cao, Gốc, Xem lại, Tốc độ, Tự động NẰM TRÊN 1 DÒNG DUY NHẤT -->
+        <div
+          class="flex items-center justify-between gap-2 px-3 py-2 border-b border-slate-100 bg-slate-50 text-xs shrink-0 overflow-x-auto">
+
+          <!-- Cụm Trái: Tiêu đề + Số nút + Chiều cao + Gốc -->
+          <div class="flex items-center gap-2 shrink-0">
+            <div class="flex items-center gap-1.5 text-slate-900 font-bold text-xs sm:text-sm whitespace-nowrap">
+              <i class="ri-compass-3-line text-slate-700 text-base"></i>
+              <span>Cây AVL</span>
+            </div>
+
+            <!-- Real-time Stats: Số nút, Chiều cao, Gốc -->
+            <div class="flex items-center gap-1.5 font-mono text-xs whitespace-nowrap">
+              <div class="px-2 py-0.5 rounded-[6px] bg-white border border-slate-200 flex items-center gap-1">
+                <span class="text-slate-500 font-medium">Số nút:</span>
+                <span id="stat-nodes" class="font-bold text-slate-900">0</span>
+              </div>
+              <div class="px-2 py-0.5 rounded-[6px] bg-white border border-slate-200 flex items-center gap-1">
+                <span class="text-slate-500 font-medium">Chiều cao (h):</span>
+                <span id="stat-height" class="font-bold text-teal-700">0</span>
+              </div>
+              <div class="px-2 py-0.5 rounded-[6px] bg-white border border-slate-200 flex items-center gap-1">
+                <span class="text-slate-500 font-medium">Gốc:</span>
+                <span id="stat-root" class="font-bold text-indigo-600">Trống</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cụm Phải: Xem lại + Tốc độ + Tự động + Bước tiếp -->
+          <div class="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
+            <!-- Replay Button -->
+            <button id="replay-btn" type="button" disabled
+              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-[6px] bg-white hover:bg-slate-100 text-slate-700 font-semibold border border-slate-200 text-xs transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none active:scale-95"
+              title="Phát lại toàn bộ quá trình vừa thực hiện">
+              <i class="ri-replay-10-line text-sm text-teal-600"></i>
+              <span>Xem lại</span>
+            </button>
+
+            <!-- Speed Controller -->
+            <div class="flex items-center gap-1.5 bg-white border border-slate-200 px-2 py-1 rounded-[6px]">
+              <i class="ri-speed-line text-slate-500 text-xs"></i>
+              <span class="text-slate-600 font-medium whitespace-nowrap text-xs">Tốc độ:</span>
+              <input type="range" id="speed-slider" min="150" max="1200" step="50" value="450"
+                class="w-14 sm:w-16 h-1 bg-slate-200 rounded-[6px] appearance-none cursor-pointer accent-teal-600" />
+              <span id="speed-label" class="font-mono font-bold text-teal-700 w-9 text-right text-xs">0.45s</span>
+            </div>
+
+            <!-- Step Mode Toggle -->
+            <button type="button" id="step-mode-toggle"
+              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-[6px] bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-semibold transition-all cursor-pointer whitespace-nowrap text-xs">
+              <i id="step-mode-icon" class="ri-play-circle-line text-xs text-teal-600"></i>
+              <span id="step-mode-text">Tự động</span>
+            </button>
+
+            <!-- Step Next Button -->
+            <button type="button" id="step-next-btn" disabled
+              class="hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-[6px] bg-teal-600 hover:bg-teal-700 text-white font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none whitespace-nowrap text-xs">
+              <i class="ri-skip-forward-line text-xs"></i>
+              <span>Bước tiếp</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Canvas SVG Body -->
+        <div id="tree-container"
+          class="relative w-full flex-1 overflow-auto flex items-center justify-center p-3 bg-slate-50/20">
+          <svg id="tree-svg" class="w-full h-full min-w-[580px] min-h-[440px]"></svg>
+
+          <!-- Floating Node Dropdown Action Menu -->
+          <div id="node-dropdown-menu"
+            class="hidden absolute z-30 bg-white border border-slate-200 rounded-[6px] p-1 text-xs font-semibold text-slate-700 min-w-[168px] transition-all">
+            <div
+              class="px-2.5 py-1.5 text-[11px] font-bold text-slate-400 border-b border-slate-100 flex items-center justify-between">
+              <span>NÚT <b id="menu-node-val" class="text-teal-700 font-mono text-xs"></b></span>
+              <span id="menu-node-info" class="font-mono text-[10px] text-slate-500"></span>
+            </div>
+            <div class="py-1 space-y-0.5">
+              <button type="button" id="menu-btn-search"
+                class="w-full text-left px-2.5 py-1.5 rounded-[6px] hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2 transition-all cursor-pointer">
+                <i class="ri-search-line text-indigo-600 text-sm"></i>
+                <span>Tìm kiếm nút</span>
+              </button>
+              <button type="button" id="menu-btn-delete"
+                class="w-full text-left px-2.5 py-1.5 rounded-[6px] hover:bg-rose-50 hover:text-rose-700 flex items-center gap-2 transition-all cursor-pointer">
+                <i class="ri-delete-bin-line text-rose-600 text-sm"></i>
+                <span>Xóa nút này</span>
+              </button>
+              <button type="button" id="menu-btn-select"
+                class="w-full text-left px-2.5 py-1.5 rounded-[6px] hover:bg-slate-100 text-slate-600 flex items-center gap-2 transition-all cursor-pointer">
+                <i class="ri-edit-line text-slate-500 text-sm"></i>
+                <span>Điền vào ô nhập</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Canvas Footer: Chú thích màu sắc nhỏ gọn dưới đáy -->
+        <div
+          class="flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 border-t border-slate-100 bg-slate-50/70 text-[11px] text-slate-600 font-medium shrink-0">
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1">
+              <i class="ri-circle-fill text-teal-600 text-[9px]"></i>
+              <span>Cân bằng (<span class="font-mono text-slate-500">|BF| &le; 1</span>)</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <i class="ri-circle-line text-rose-600 text-[9px] font-bold"></i>
+              <span class="text-rose-700 font-semibold">Mất cân bằng (<span class="font-mono">|BF| &ge; 2</span>)</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <i class="ri-circle-fill text-amber-500 text-[9px]"></i>
+              <span>Đang duyệt</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <i class="ri-circle-fill text-emerald-500 text-[9px]"></i>
+              <span>Vừa chèn / Tìm thấy</span>
+            </div>
+          </div>
+          <span class="text-[10px] text-slate-400 font-mono">Nhấp vào nút để thao tác nhanh</span>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: 4 of 12 cols on XL - Live Step-by-Step Execution Log -->
+      <section
+        class="lg:col-span-5 xl:col-span-4 bg-white border border-slate-200 rounded-[6px] overflow-hidden flex flex-col h-full min-h-[540px] lg:h-[calc(100vh-140px)]">
+
+        <!-- Section Header -->
+        <div class="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 bg-slate-50 shrink-0">
+          <div class="flex items-center gap-2">
+            <div class="flex items-center justify-center">
+              <i class="ri-file-list-3-line text-lg"></i>
+            </div>
+            <h2 class="text-xs sm:text-sm font-bold text-slate-900">
+              Phân Tích Chi Tiết
+            </h2>
+          </div>
+
+          <span id="log-status-badge"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+            <i class="ri-checkbox-circle-line text-xs text-teal-600"></i> Sẵn sàng
+          </span>
+        </div>
+
+        <!-- Scrollable Log Content -->
+        <div id="modal-body-content" class="p-4 overflow-y-auto flex-1 space-y-3">
+          <!-- Initial Empty State -->
+          <div class="text-center py-16 space-y-3">
+            <div
+              class="w-14 h-14 rounded-[6px] bg-teal-50 text-teal-700 border border-teal-200 flex items-center justify-center mx-auto">
+              <i class="ri-node-tree text-3xl leading-none"></i>
+            </div>
+            <p class="text-sm sm:text-base font-bold text-slate-800">Chưa có thao tác nào được thực hiện</p>
+            <p class="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
+              Nhập số và nhấn <b>Thêm</b>, <b>Xóa</b> hoặc chọn <b>Mẫu thử</b> để theo dõi phân tích trực tiếp.
+            </p>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- Application Script -->
+  <script type="module" src="./js/app.js"></script>
+</body>
+
+</html>
