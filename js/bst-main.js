@@ -1,5 +1,5 @@
 import { BinarySearchTree } from "./bst.js";
-import { drawTree, createMiniTreeVis } from "./ui.js";
+import { drawTree, createMiniTreeVis, createZoomableMiniVis } from "./ui.js";
 
 const ANIMATION_DELAY = 400;
 
@@ -118,16 +118,17 @@ class BSTHandler {
       }
       this.modalBodyContent.appendChild(visHeader);
 
-      const visDiv = document.createElement("div");
-      visDiv.className = "mini-vis";
-
       const treeForVis = tempTree.clone();
       if (action === "insert" && !found) {
         treeForVis.insert(value);
       }
       const pathForVis = treeForVis.findPath(value);
 
-      visDiv.appendChild(createMiniTreeVis(treeForVis, pathForVis));
+      const visDiv = createZoomableMiniVis(
+        treeForVis,
+        pathForVis,
+        action === "delete" ? `Cây trước khi xóa (${value})` : `Trạng thái cây (${value})`
+      );
       this.modalBodyContent.appendChild(visDiv);
 
       if (action === "delete" && found) {
@@ -135,11 +136,10 @@ class BSTHandler {
         postHeader.className = "operation-header-child";
         postHeader.textContent = "Cây sau khi xóa:";
         this.modalBodyContent.appendChild(postHeader);
-        const postDiv = document.createElement("div");
-        postDiv.className = "mini-vis";
+
         const postTree = tempTree.clone();
         postTree.delete(value);
-        postDiv.appendChild(createMiniTreeVis(postTree, []));
+        const postDiv = createZoomableMiniVis(postTree, [], `Cây sau khi xóa (${value})`);
         this.modalBodyContent.appendChild(postDiv);
       }
 

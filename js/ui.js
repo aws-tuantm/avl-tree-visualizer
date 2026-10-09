@@ -304,6 +304,212 @@ function createMiniTreeVis(sourceTree, highlightedPath = []) {
 }
 
 /**
+ * Tạo cây hiển thị kích thước lớn (Large Tree Vis) cho Modal phóng to
+ */
+function createLargeTreeVis(sourceTree, highlightedPath = []) {
+  const largeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  largeSvg.setAttribute("class", "w-full h-full min-h-[480px] max-h-[75vh]");
+
+  if (!sourceTree.root) return largeSvg;
+
+  const tree = sourceTree.clone();
+  const treeHeight = tree.root.height;
+  const leavesCount = Math.pow(2, Math.max(treeHeight - 1, 0));
+  const svgWidth = Math.max(920, leavesCount * 125);
+  const nodeRadius = 30;
+  const verticalSpacing = 98;
+
+  const neededHeight = Math.max(480, verticalSpacing * (treeHeight - 1) + nodeRadius * 2 + 80);
+  largeSvg.setAttribute("viewBox", `0 0 ${svgWidth} ${neededHeight}`);
+  largeSvg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+  function assignLargeCoordinates(node, x, y, offset) {
+    if (!node) return;
+    node.x = x;
+    node.y = y;
+    assignLargeCoordinates(node.left, x - offset, y + verticalSpacing, offset / 2);
+    assignLargeCoordinates(node.right, x + offset, y + verticalSpacing, offset / 2);
+  }
+
+  assignLargeCoordinates(tree.root, svgWidth / 2, nodeRadius + 38, svgWidth / 4);
+
+  function drawLargeElements(node) {
+    if (!node) return;
+    if (node.left) drawLargeLine(node, node.left);
+    if (node.right) drawLargeLine(node, node.right);
+    drawLargeElements(node.left);
+    drawLargeElements(node.right);
+    drawLargeNode(node);
+  }
+
+  function drawLargeLine(from, to) {
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("class", "link");
+    line.setAttribute("x1", from.x);
+    line.setAttribute("y1", from.y);
+    line.setAttribute("x2", to.x);
+    line.setAttribute("y2", to.y);
+    line.style.strokeWidth = "3px";
+    largeSvg.prepend(line);
+  }
+
+  const highlightedValues = new Set(highlightedPath.map((p) => p.value));
+
+  function drawLargeNode(node) {
+    const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    group.setAttribute("class", "node");
+
+    if (highlightedValues.has(node.value)) {
+      group.classList.add("traversed");
+    }
+
+    const bf = getNodeBF(node);
+    const isImbalanced = Math.abs(bf) >= 2;
+    if (isImbalanced) {
+      group.classList.add("node-imbalanced");
+    }
+
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("class", "node-circle");
+    circle.setAttribute("cx", node.x);
+    circle.setAttribute("cy", node.y);
+    circle.setAttribute("r", nodeRadius);
+
+    const valueText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    valueText.setAttribute("class", "value-text");
+    valueText.setAttribute("x", node.x);
+    valueText.setAttribute("y", node.y);
+    valueText.style.fontSize = "17px";
+    valueText.style.fontWeight = "800";
+    valueText.textContent = node.value;
+
+    // Badge Pill
+    const badgeW = 92;
+    const badgeH = 25;
+    const badgeX = node.x - badgeW / 2;
+    const badgeY = node.y + nodeRadius + 9;
+
+    const badgeRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    badgeRect.setAttribute("x", badgeX);
+    badgeRect.setAttribute("y", badgeY);
+    badgeRect.setAttribute("width", badgeW);
+    badgeRect.setAttribute("height", badgeH);
+    badgeRect.setAttribute("rx", "6");
+    badgeRect.setAttribute("ry", "6");
+    badgeRect.setAttribute("class", isImbalanced ? "badge-rect-imbalanced" : "badge-rect-normal");
+
+    const badgeText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    badgeText.setAttribute("x", node.x);
+    badgeText.setAttribute("y", badgeY + badgeH / 2);
+    badgeText.setAttribute("text-anchor", "middle");
+    badgeText.setAttribute("dominant-baseline", "central");
+    badgeText.setAttribute("alignment-baseline", "central");
+    badgeText.setAttribute("class", isImbalanced ? "badge-text-imbalanced" : "badge-text-normal");
+    badgeText.style.fontSize = "11.5px";
+    badgeText.style.fontWeight = "700";
+    const bfSign = bf > 0 ? `+${bf}` : `${bf}`;
+    badgeText.textContent = `h=${node.height} · BF=${bfSign}`;
+
+    group.append(circle, valueText, badgeRect, badgeText);
+    largeSvg.appendChild(group);
+  }
+
+  drawLargeElements(tree.root);
+  return largeSvg;
+}
+
+/**
+ * Mở modal phóng to sơ đồ cây
+ */
+function openTreeZoomModal(sourceTree, highlightedPath = [], title = "Chi Tiết Sơ Đồ Cây", subtitle = "") {
+  const modal = document.getElementById("tree-zoom-modal");
+  const modalBody = document.getElementById("zoom-modal-body");
+  const modalTitle = document.getElementById("zoom-modal-title");
+  const modalSubtitle = document.getElementById("zoom-modal-subtitle");
+
+  if (!modal || !modalBody) return;
+
+  if (modalTitle) modalTitle.textContent = title;
+  if (modalSubtitle) modalSubtitle.textContent = subtitle || "Trực quan hóa cấu trúc cây kích thước lớn";
+
+  modalBody.innerHTML = "";
+  const largeSvg = createLargeTreeVis(sourceTree, highlightedPath);
+  modalBody.appendChild(largeSvg);
+
+  modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+/**
+ * Đóng modal phóng to
+ */
+function closeTreeZoomModal() {
+  const modal = document.getElementById("tree-zoom-modal");
+  if (modal) {
+    modal.classList.add("hidden");
+    document.body.style.overflow = "";
+  }
+}
+
+// Gắn sự kiện đóng modal
+if (typeof window !== "undefined") {
+  const initModalEvents = () => {
+    const modal = document.getElementById("tree-zoom-modal");
+    const closeBtn = document.getElementById("zoom-modal-close");
+    const closeBtn2 = document.getElementById("zoom-modal-close-btn");
+
+    if (closeBtn) closeBtn.onclick = closeTreeZoomModal;
+    if (closeBtn2) closeBtn2.onclick = closeTreeZoomModal;
+
+    if (modal) {
+      modal.onclick = (e) => {
+        if (e.target === modal) closeTreeZoomModal();
+      };
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal && !modal.classList.contains("hidden")) {
+        closeTreeZoomModal();
+      }
+    });
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initModalEvents);
+  } else {
+    initModalEvents();
+  }
+}
+
+/**
+ * Tạo khung hình cây mini kèm nút phóng to ở góc trái khi hover
+ */
+function createZoomableMiniVis(sourceTree, highlightedPath = [], title = "Chi Tiết Sơ Đồ Cây", subtitle = "") {
+  const container = document.createElement("div");
+  container.className = "mini-vis";
+
+  // Nút icon phóng to ở góc trái
+  const zoomBtn = document.createElement("button");
+  zoomBtn.type = "button";
+  zoomBtn.className = "mini-vis-zoom-btn";
+  zoomBtn.title = "Phóng to sơ đồ cây này";
+  zoomBtn.innerHTML = `
+    <i class="ri-zoom-in-line text-sm text-teal-600"></i>
+    <span>Phóng to</span>
+  `;
+  zoomBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    openTreeZoomModal(sourceTree, highlightedPath, title, subtitle);
+  });
+
+  const miniSvg = createMiniTreeVis(sourceTree, highlightedPath);
+  container.appendChild(zoomBtn);
+  container.appendChild(miniSvg);
+
+  return container;
+}
+
+/**
  * Hiển thị tooltip so sánh trực quan phía trên nút trong SVG
  */
 function showComparisonCallout(svg, node, compareValue, action = "insert") {
@@ -377,5 +583,14 @@ function clearAllCallouts(svg) {
   });
 }
 
-export { drawTree, createMiniTreeVis, showComparisonCallout, clearAllCallouts };
+export {
+  drawTree,
+  createMiniTreeVis,
+  createZoomableMiniVis,
+  createLargeTreeVis,
+  openTreeZoomModal,
+  closeTreeZoomModal,
+  showComparisonCallout,
+  clearAllCallouts
+};
 

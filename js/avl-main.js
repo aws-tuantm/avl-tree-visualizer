@@ -1,5 +1,5 @@
 import { AVLTree } from "./avl.js";
-import { drawTree, createMiniTreeVis, showComparisonCallout, clearAllCallouts } from "./ui.js";
+import { drawTree, createMiniTreeVis, createZoomableMiniVis, showComparisonCallout, clearAllCallouts } from "./ui.js";
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -656,9 +656,12 @@ class AVLHandler {
         preHeader.innerHTML = `<i class="ri-git-commit-line text-slate-500"></i> <span>1. Trạng thái cây sau khi chèn (theo quy tắc BST):</span>`;
         card.appendChild(preHeader);
 
-        const preDiv = document.createElement("div");
-        preDiv.className = "mini-vis";
-        preDiv.appendChild(createMiniTreeVis(treeAfterBstInsert, bstPathNodes));
+        const preDiv = createZoomableMiniVis(
+          treeAfterBstInsert,
+          bstPathNodes,
+          `1. Cây sau khi chèn BST (${value})`,
+          "Trạng thái cây nhị phân tìm kiếm trước khi kiểm tra hệ số cân bằng"
+        );
         card.appendChild(preDiv);
 
         if (unbalancedNode) {
@@ -673,9 +676,12 @@ class AVLHandler {
             firstRotHeader.innerHTML = `<i class="ri-loop-right-line text-slate-500"></i> <span>2. ${firstRotationDescription}:</span>`;
             card.appendChild(firstRotHeader);
 
-            const firstRotDiv = document.createElement("div");
-            firstRotDiv.className = "mini-vis";
-            firstRotDiv.appendChild(createMiniTreeVis(treeAfterFirstRotation, []));
+            const firstRotDiv = createZoomableMiniVis(
+              treeAfterFirstRotation,
+              [],
+              `2. ${firstRotationDescription}`,
+              `Bước xoay phụ để chuyển về dạng xoay đơn (${caseType})`
+            );
             card.appendChild(firstRotDiv);
 
             const secondRotHeader = document.createElement("div");
@@ -690,11 +696,14 @@ class AVLHandler {
             card.appendChild(rotHeader);
           }
 
-          const finalDiv = document.createElement("div");
-          finalDiv.className = "mini-vis";
           const finalTree = tempTree.clone();
           finalTree.insert(value);
-          finalDiv.appendChild(createMiniTreeVis(finalTree, []));
+          const finalDiv = createZoomableMiniVis(
+            finalTree,
+            [],
+            `Cây AVL sau khi xoay & cân bằng (${value})`,
+            "Trạng thái cây AVL hoàn tất sau phép xoay"
+          );
           card.appendChild(finalDiv);
         } else {
           const balanceInfo = document.createElement("div");
@@ -708,9 +717,12 @@ class AVLHandler {
         preDeleteHeader.innerHTML = `<i class="ri-git-commit-line text-slate-500"></i> <span>1. Trạng thái cây trước khi xóa:</span>`;
         card.appendChild(preDeleteHeader);
 
-        const preDeleteDiv = document.createElement("div");
-        preDeleteDiv.className = "mini-vis";
-        preDeleteDiv.appendChild(createMiniTreeVis(tempTree, path));
+        const preDeleteDiv = createZoomableMiniVis(
+          tempTree,
+          path,
+          `1. Cây trước khi xóa nút ${value}`,
+          "Đường dẫn tìm kiếm nút cần xóa"
+        );
         card.appendChild(preDeleteDiv);
 
         const { balancingSteps, finalTree } = tempTree.getDeletionDetails(value);
@@ -722,9 +734,12 @@ class AVLHandler {
             stepHeader.innerHTML = `<i class="ri-loop-right-line text-slate-500"></i> <span>${index + 2}. ${step.description}</span>`;
             card.appendChild(stepHeader);
 
-            const stepDiv = document.createElement("div");
-            stepDiv.className = "mini-vis";
-            stepDiv.appendChild(createMiniTreeVis(step.treeState, []));
+            const stepDiv = createZoomableMiniVis(
+              step.treeState,
+              [],
+              `${index + 2}. ${step.description}`,
+              "Quá trình xoay để tái cân bằng sau khi xóa"
+            );
             card.appendChild(stepDiv);
           });
           const finalHeader = document.createElement("div");
@@ -738,9 +753,12 @@ class AVLHandler {
           card.appendChild(finalHeader);
         }
 
-        const finalDiv = document.createElement("div");
-        finalDiv.className = "mini-vis";
-        finalDiv.appendChild(createMiniTreeVis(finalTree, []));
+        const finalDiv = createZoomableMiniVis(
+          finalTree,
+          [],
+          `Cây AVL sau khi xóa nút ${value}`,
+          "Trạng thái cây AVL sau khi hoàn tất loại bỏ nút"
+        );
         card.appendChild(finalDiv);
       } else if (action === "search") {
         const visHeader = document.createElement("div");
@@ -748,9 +766,12 @@ class AVLHandler {
         visHeader.innerHTML = `<i class="ri-route-line text-slate-500"></i> <span>Trực quan hóa đường đi tìm kiếm:</span>`;
         card.appendChild(visHeader);
 
-        const visDiv = document.createElement("div");
-        visDiv.className = "mini-vis";
-        visDiv.appendChild(createMiniTreeVis(tempTree, path));
+        const visDiv = createZoomableMiniVis(
+          tempTree,
+          path,
+          `Đường đi tìm kiếm nút ${value}`,
+          found ? `Tìm thấy nút ${value}` : `Không tìm thấy nút ${value}`
+        );
         card.appendChild(visDiv);
       }
 
